@@ -9,24 +9,35 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import json
+import os
+from django.core.management.utils import get_random_secret_key
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-h1(qpw7@*ol3a$*7_nparxtxh27dw9m$thzt@-0ia78#v=qtff"
+SECRET_KEY = os.environ.get("SECRET_KEY", get_random_secret_key())
+ENV = os.environ.get("ENV", "local")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,").split(",")
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "localhost,").split(",")
+USE_EMAIL_IN_LOCAL = os.environ.get("USE_EMAIL_IN_LOCAL", 0)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
-
+if ENV == "production":
+    DEBUG = False
+    CORS_ALLOWED_ORIGINS = CORS_ORIGINS
+else:
+    # SECURITY WARNING: don't run with debug turned on in production!
+    DEBUG = True
+    CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -37,13 +48,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "rest_framework",
+    # "rest_framework.authtoken",
+    "corsheaders",
     "blog",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -56,7 +71,7 @@ ROOT_URLCONF = "setup.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [TEMPLATE_DIR],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -77,8 +92,13 @@ WSGI_APPLICATION = "setup.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends." + os.environ.get("DBENGINE", "sqlite3"),
+        "NAME": os.environ.get("DBNAME", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("DBUSER", ""),
+        "PASSWORD": os.environ.get("DBPASSWORD", ""),
+        "HOST": os.environ.get("DBHOST", "127.0.0.1"),
+        "PORT": os.environ.get("DBPORT", "3306"),
+        "OPTIONS": json.loads(os.getenv("DATABASE_OPTIONS", "{}")),
     }
 }
 
@@ -117,9 +137,59 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    # '/var/www/static/',
+]
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = os.path.join(BASE_DIR, "media/")
+STATIC_ROOT = "staticfiles/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+if ENV != "local":
+    STATIC_URL = "static/"
+
+    # Email configuration
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
+    EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "dummy@ktechhub.com")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_USE_SSL = False
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    SERVER_EMAIL = EMAIL_HOST_USER
+
+else:
+    STATIC_URL = "static/"
+    if int(USE_EMAIL_IN_LOCAL) == 1:
+        # Email configuration
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+        EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+        EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
+        EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
+        EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "dummy@ktechhub.com")
+        EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+        EMAIL_USE_SSL = False
+        DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+        SERVER_EMAIL = EMAIL_HOST_USER
+    else:
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+# Rest Framework Settings
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "setup.pagination.PageNumberPaginationNoCount",
+    "PAGE_SIZE": 500,
+}
+
+SITE_ID = 1
