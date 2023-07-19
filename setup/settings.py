@@ -55,8 +55,11 @@ INSTALLED_APPS = [
     # "rest_framework.authtoken",
     "rest_framework_simplejwt",
     "corsheaders",
+    "users",
     "blog",
 ]
+
+AUTH_USER_MODEL = "users.CustomUser"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

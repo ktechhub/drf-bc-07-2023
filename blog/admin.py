@@ -5,4 +5,16 @@ from blog.models import Post
 # Register your models here.
 
 
-admin.site.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = [
+        "title",
+        "slug",
+        "is_active",
+        "views",
+        "created_at",
+        "updated_at",
+    ]
+    readonly_fields = ["slug"]
+
+
+admin.site.register(Post, PostAdmin)
