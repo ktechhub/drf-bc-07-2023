@@ -14,3 +14,41 @@ class RegisterSerializer(serializers.Serializer):
     password2 = serializers.CharField(
         min_length=6, required=True, style={"input_type": "password"}
     )
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """User Details Serializer"""
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "username",
+            "email",
+            "auth_provider",
+            "is_admin",
+            "is_verified",
+            "is_active",
+            "last_login",
+            "date_joined",
+        ]
+        read_only_fields = (
+            "email",
+            "is_admin",
+            "last_login",
+            "date_joined",
+            "is_active",
+            "is_verified",
+        )
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        min_length=6, required=True, style={"input_type": "password"}
+    )
+    email = serializers.EmailField(max_length=120, min_length=4)
+
+    class Meta:
+        model = User
+        fields = ["email", "password"]
