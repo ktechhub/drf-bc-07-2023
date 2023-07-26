@@ -55,12 +55,12 @@ class RegisterView(CreateAPIView):
             user=user, code=generate_code()
         )
         send_email_verification_code(
-                    {
-                        "name": user.get_full_name(),
-                        "email": user.email,
-                        "verify_code": str(user_verification_code.code),
-                    }
-                )
+            {
+                "name": user.get_full_name(),
+                "email": user.email,
+                "verify_code": str(user_verification_code.code),
+            }
+        )
         return Response(
             {
                 "status": status.HTTP_201_CREATED,

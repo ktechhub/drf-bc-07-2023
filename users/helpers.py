@@ -13,15 +13,13 @@ def send_email_verification_code(data):
         "verify_code": data["verify_code"],
         "email": data["email"],
         "name": data["name"],
-        "subject": "DRF - Account Activation"
+        "subject": "DRF - Account Activation",
     }
-    
+
     mail_template = get_template("email/verify_email.html").render(context)
 
     email = EmailMultiAlternatives(
-        subject=context["subject"],
-        body=" ",
-        to=[context["email"]]
+        subject=context["subject"], body=" ", to=[context["email"]]
     )
     email.attach_alternative(mail_template, "text/html")
     email.send()

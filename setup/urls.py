@@ -25,8 +25,10 @@ from drf_yasg import openapi
 
 from django.http import HttpResponse
 
+
 def home(request):
     return HttpResponse("Hello, Nothing Here... Contact Us!")
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -57,7 +59,7 @@ urlpatterns = [
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path("admin/", admin.site.urls),
     path("api/v1/auth/", include("users.urls")),
-    path("api/v1/posts/", include("blog.urls")),
+    path("api/v1/blog/", include("blog.urls")),
 ]
 
 urlpatterns += static(
@@ -66,4 +68,3 @@ urlpatterns += static(
 urlpatterns += static(
     settings.STATIC_URL, document_root=settings.STATIC_ROOT, show_indexes=settings.DEBUG
 )
-
